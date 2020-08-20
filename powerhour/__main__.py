@@ -6,7 +6,7 @@ from powerhour.args import ArgumentParser
 from powerhour.datastructures import VideoFrameSize
 from powerhour.downloader import Downloader
 from powerhour.filesystem import VIDEO_DOWNLOAD_DIR_NAME, mkdir_if_not_exists
-from powerhour.logging import YouTubeLogger, LOGGER
+from powerhour.logging import LOGGER, ProgressPercentageLogger, YouTubeLogger
 from powerhour.processing import ClipProcessor
 from powerhour.youtube import YouTubeApiClient
 
@@ -69,7 +69,10 @@ def _main():
         uniform_frame_size=VideoFrameSize(length=720, width=1280),
     )
     LOGGER.info('Writing power hour video to file')
-    power_hour.write_videofile(os.path.join(VIDEO_DOWNLOAD_DIR_NAME, 'power_hour.mp4'))
+    power_hour.write_videofile(
+        os.path.join(VIDEO_DOWNLOAD_DIR_NAME, 'power_hour.mp4'),
+        logger=ProgressPercentageLogger() if False else 'bar',
+    )
     LOGGER.info('Done!')
 
 
