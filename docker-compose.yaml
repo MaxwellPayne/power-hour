@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  powerhour:
+    image: powerhour:latest
+    container_name: powerhour
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: powerhour.env
+    volumes:
+      - ./video_downloads:/usr/src/app/video_downloads
