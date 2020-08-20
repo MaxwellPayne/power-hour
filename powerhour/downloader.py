@@ -1,9 +1,10 @@
 import os
-from typing import List, Set
+from typing import Dict, List
 
 import youtube_dl
 
 from powerhour.filesystem import VIDEO_DOWNLOAD_DIR_NAME
+from powerhour.logging import LOGGER
 
 
 class Downloader(youtube_dl.YoutubeDL):
@@ -13,7 +14,7 @@ class Downloader(youtube_dl.YoutubeDL):
 
     def __init__(self, params=None, auto_init=True):
         super().__init__(params=params, auto_init=auto_init)
-        self.video_ids: Set[str] = set()
+        self.video_ids_and_titles: Dict[str, str] = {}
         self._video_file_paths: List[str] = []
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -24,7 +25,9 @@ class Downloader(youtube_dl.YoutubeDL):
     def process_info(self, info_dict):
         ret = super().process_info(info_dict)
         # capture the video ID once it's done downloading
-        self.video_ids.add(info_dict['id'])
+        video_id, title = info_dict['id'], info_dict['title']
+        self.video_ids_and_titles[video_id] = title
+        LOGGER.info(f'Finished processing {video_id}: {title}')
         return ret
 
     @property
@@ -53,17 +56,35 @@ class Downloader(youtube_dl.YoutubeDL):
         file_name = cls.file_name(absolute_file_path)
         return file_name.split('___')[1]
 
+    def find_missing_video_ids(self):
+        absolute_file_paths_in_video_dir = self._absolute_file_paths_in_video_dir()
+        missing_video_ids = set(self.video_ids_and_titles.keys())
+
+        for video_id in tuple(missing_video_ids):
+            for fname in absolute_file_paths_in_video_dir:
+                if f'___{video_id}___' in fname:
+                    missing_video_ids.remove(video_id)
+                    break
+
+        return list(missing_video_ids)
+
     def _find_downloaded_video_file_paths(self):
-        absolute_file_paths_in_video_dir = []
-        for dirpath, _, filenames in os.walk(VIDEO_DOWNLOAD_DIR_NAME):
-            for fname in filenames:
-                absolute_file_paths_in_video_dir.append(os.path.abspath(os.path.join(dirpath, fname)))
+        absolute_file_paths_in_video_dir = self._absolute_file_paths_in_video_dir()
 
         video_file_paths = []
-        for video_id in self.video_ids:
+        for video_id in self.video_ids_and_titles.keys():
             for fname in absolute_file_paths_in_video_dir:
                 if f'___{video_id}___' in fname:
                     video_file_paths.append(fname)
                     break
 
         return video_file_paths
+
+    @staticmethod
+    def _absolute_file_paths_in_video_dir():
+        paths = []
+        for dirpath, _, filenames in os.walk(VIDEO_DOWNLOAD_DIR_NAME):
+            for fname in filenames:
+                paths.append(os.path.abspath(os.path.join(dirpath, fname)))
+
+        return paths

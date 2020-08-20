@@ -1,4 +1,3 @@
-import logging
 import os
 import shutil
 from typing import Dict, Optional
@@ -7,13 +6,9 @@ from powerhour.args import ArgumentParser
 from powerhour.datastructures import VideoFrameSize
 from powerhour.downloader import Downloader
 from powerhour.filesystem import VIDEO_DOWNLOAD_DIR_NAME, mkdir_if_not_exists
-from powerhour.logging import YouTubeLogger
+from powerhour.logging import YouTubeLogger, LOGGER
 from powerhour.processing import ClipProcessor
 from powerhour.youtube import YouTubeApiClient
-
-
-logging.basicConfig(level=os.environ.get('LOG_LEVEL', 'INFO'))
-logger = logging.getLogger(__name__)
 
 
 def _map_filenames_to_notes_if_possible(
@@ -48,15 +43,21 @@ def _main():
     ydl_opts = {
         'logger': YouTubeLogger(),
         'outtmpl': os.path.join(VIDEO_DOWNLOAD_DIR_NAME, Downloader.YOUTUBE_DL_OUTPUT_FORMAT),
+        'ignoreerrors': True,
     }
 
     shutil.rmtree(VIDEO_DOWNLOAD_DIR_NAME, ignore_errors=True)
     mkdir_if_not_exists(VIDEO_DOWNLOAD_DIR_NAME)
-    logger.info(f'Download starting for playlist: {args.playlist_url}')
+    LOGGER.info(f'Download starting for playlist: {args.playlist_url}')
     with Downloader(ydl_opts) as ydl:
         ydl.download([args.playlist_url])
 
-    logger.info('Finished YouTube downloads, combining video clips')
+    missing_video_ids = ydl.find_missing_video_ids()
+    if missing_video_ids:
+        missing_video_names = [ydl.video_ids_and_titles[video_id] for video_id in missing_video_ids]
+        LOGGER.error('The following videos failed to download:' + '\n        - '.join([''] + missing_video_names))
+
+    LOGGER.info('Finished YouTube downloads, combining video clips')
     filename_to_note_map = _map_filenames_to_notes_if_possible(
         downloader=ydl,
         playlist_url=arg_parser.extract_playlist_id_from_url(args.playlist_url),
@@ -67,9 +68,9 @@ def _main():
         clip_length_seconds=60,
         uniform_frame_size=VideoFrameSize(length=720, width=1280),
     )
-    logger.info('Writing power hour video to file')
+    LOGGER.info('Writing power hour video to file')
     power_hour.write_videofile(os.path.join(VIDEO_DOWNLOAD_DIR_NAME, 'power_hour.mp4'))
-    logger.info('Done!')
+    LOGGER.info('Done!')
 
 
 if __name__ == '__main__':
