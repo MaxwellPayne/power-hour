@@ -27,6 +27,9 @@ class YouTubeApiClient:
         Call the playlist items API endpoint for the given playlist ID, then look at the response and
         map all playlist video IDs to the value of their `note` field in `contentDetails`, or to
         `None` if the video ID has no `note`.
+        You can write this `note` value to playlist items by visiting:
+            https://www.youtube.com/playlist?list=YOUR_PLAYLIST_ID&advanced_settings=1&disable_polymer=1
+            Then hovering over the "More" menu for a song and clicking "Add / edit notes"
         :return: Mapping of {YouTube video ID : `note` text from corresponding PlaylistItem contentDetails, if exists}
         """
         playlist_json = self.fetch_playlist_items(playlist_id)

@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 from typing import Dict, Optional
@@ -12,6 +13,10 @@ from powerhour.processing import ClipProcessor
 from powerhour.youtube import YouTubeApiClient
 
 
+logging.basicConfig(level=os.environ.get('LOG_LEVEL', 'INFO'))
+logger = logging.getLogger(__name__)
+
+
 def _map_filenames_to_notes_if_possible(
         download_hook: DownloadRecorderHook,
         playlist_url: str,
@@ -23,7 +28,7 @@ def _map_filenames_to_notes_if_possible(
     :param youtube_api_key: Optional YouTube API Key, map will be empty if not provided
     :return: Mapping of {downloaded filename : `note` text from corresponding PlaylistItem contentDetails, if exists}
     """
-    if youtube_api_key is None:
+    if not youtube_api_key:
         return {}
 
     youtube_api = YouTubeApiClient(youtube_api_key)
@@ -52,9 +57,11 @@ def _main():
 
     shutil.rmtree(VIDEO_DOWNLOAD_DIR_NAME, ignore_errors=True)
     mkdir_if_not_exists(VIDEO_DOWNLOAD_DIR_NAME)
+    logger.info(f'Download starting for playlist: {args.playlist_url}')
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         ydl.download([args.playlist_url])
 
+    logger.info('Finished YouTube downloads, combining video clips')
     filename_to_note_map = _map_filenames_to_notes_if_possible(
         download_hook=download_recorder_hook,
         playlist_url=arg_parser.extract_playlist_id_from_url(args.playlist_url),
@@ -64,7 +71,9 @@ def _main():
         (ClipProcessor(fname, video_notes=filename_to_note_map.get(fname)) for fname in download_recorder_hook.files_sorted),
         clip_length_seconds=60,
     )
+    logger.info('Writing power hour video to file')
     power_hour.write_videofile(os.path.join(VIDEO_DOWNLOAD_DIR_NAME, 'power_hour.mp4'))
+    logger.info('Done!')
 
 
 if __name__ == '__main__':

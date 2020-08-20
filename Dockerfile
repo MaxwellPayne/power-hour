@@ -8,6 +8,7 @@ WORKDIR /usr/src/app
 
 RUN pip install -r requirements.txt
 
+ENV LOG_LEVEL="INFO"
 ENV PLAYLIST_URL=""
 ENV YOUTUBE_API_KEY=""
 
