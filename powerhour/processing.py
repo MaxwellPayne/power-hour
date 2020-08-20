@@ -9,6 +9,7 @@ from moviepy.editor import (
     concatenate_videoclips,
 )
 
+from powerhour.datastructures import VideoFrameSize
 from powerhour.filesystem import asset_path
 
 
@@ -40,7 +41,12 @@ class ClipProcessor:
         return self.clip.subclip(t_start=t_start, t_end=t_start + clip_length_seconds)
 
     @classmethod
-    def combine(cls, processors: Iterable['ClipProcessor'], clip_length_seconds: int) -> VideoFileClip:
+    def combine(
+            cls,
+            processors: Iterable['ClipProcessor'],
+            clip_length_seconds: int,
+            uniform_frame_size: Optional[VideoFrameSize] = None,
+    ) -> VideoFileClip:
         clips = []
 
         for idx, processor in enumerate(processors):
@@ -48,6 +54,9 @@ class ClipProcessor:
             if idx > 0:
                 # apply transition noise for all clips but the first
                 clip = clip.afx(lambda c: CompositeAudioClip([c, cls.ding_crack_audio()]))
+
+            if uniform_frame_size is not None:
+                clip = clip.resize((uniform_frame_size.width, uniform_frame_size.length))
 
             clips.append(clip)
 
