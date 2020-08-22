@@ -3,8 +3,8 @@ from typing import Dict, List
 
 import youtube_dl
 
-from powerhour.filesystem import VIDEO_DOWNLOAD_DIR_NAME
-from powerhour.logging import LOGGER
+from powerhour.generation.filesystem import VIDEO_DOWNLOAD_DIR_NAME
+from powerhour.generation.logging import LOGGER
 
 
 class Downloader(youtube_dl.YoutubeDL):

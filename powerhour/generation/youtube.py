@@ -2,6 +2,8 @@ from typing import Any, Dict, Optional
 
 import requests
 
+from powerhour.generation.downloader import Downloader
+
 
 class YouTubeApiClient:
     def __init__(self, api_key: str):
@@ -40,3 +42,29 @@ class YouTubeApiClient:
             mapping[content_details['videoId']] = content_details.get('note')
 
         return mapping
+
+    @classmethod
+    def map_filenames_to_notes_if_possible(
+            cls,
+            downloader: Downloader,
+            playlist_url: str,
+            youtube_api_key: Optional[str],
+    ) -> Dict[str, Optional[str]]:
+        """
+        :param downloader: A downloader with its downloaded filenames already populated
+        :param playlist_url: Full URL for a YouTube playlist
+        :param youtube_api_key: Optional YouTube API Key, map will be empty if not provided
+        :return: Mapping of {downloaded filename : `note` text from corresponding PlaylistItem contentDetails, if exists}
+        """
+        if not youtube_api_key:
+            return {}
+
+        youtube_api = cls(youtube_api_key)
+        video_ids_to_note_map = youtube_api.map_video_ids_to_note(playlist_url)
+
+        filename_to_note_map = {}
+        for filename in downloader.files_sorted:
+            video_id = downloader.parse_out_video_id(filename)
+            filename_to_note_map[filename] = video_ids_to_note_map.get(video_id)
+
+        return filename_to_note_map

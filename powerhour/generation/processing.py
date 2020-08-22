@@ -9,8 +9,8 @@ from moviepy.editor import (
     concatenate_videoclips,
 )
 
-from powerhour.datastructures import VideoFrameSize
-from powerhour.filesystem import asset_path
+from powerhour.generation.datastructures import VideoFrameSize
+from powerhour.generation.filesystem import asset_path
 
 
 class ClipProcessor:

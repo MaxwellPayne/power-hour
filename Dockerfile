@@ -1,7 +1,6 @@
 FROM python:3.7-stretch
 
 ADD ./requirements.txt /usr/src/app/
-ADD ./assets /usr/src/app/assets/
 ADD ./powerhour /usr/src/app/powerhour/
 
 WORKDIR /usr/src/app

@@ -9,4 +9,4 @@ services:
       dockerfile: Dockerfile
     env_file: powerhour.env
     volumes:
-      - ./video_downloads:/usr/src/app/video_downloads
+      - ./video_downloads:/usr/src/app/powerhour/generation/video_downloads
