@@ -19,7 +19,5 @@ services:
       context: .
       dockerfile: Dockerfile
     env_file: powerhour.env
-    volumes:  # TODO: remove when tmp directories used
-      - ./video_downloads:/usr/src/app/powerhour/generation/video_downloads
     ports:
       - "8000:8000"
