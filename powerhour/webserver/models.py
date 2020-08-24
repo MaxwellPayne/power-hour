@@ -26,6 +26,12 @@ class GeneratePowerHourJob(pydantic.BaseModel):
     playlist_url: str
     completion_percentage: Decimal = Decimal(0)
     videos_processed: int = 0
+    output_file: Optional[str] = None
 
     class Config:
         orm_mode = True
+
+    def dict(self, *args, **kwargs):
+        d = super().dict(*args, **kwargs)
+        del d['output_file']
+        return d

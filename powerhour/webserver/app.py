@@ -1,7 +1,9 @@
 import asyncio
+import tempfile
 import uuid
 
 from fastapi import FastAPI
+from starlette.responses import FileResponse
 
 import powerhour.webserver.executor
 from powerhour.generation import generate_powerhour
@@ -10,7 +12,7 @@ from powerhour.webserver.models import GeneratePowerHourJob, GeneratePowerHourRe
 from powerhour.webserver.progress_logger import ProgressPercentageLogger
 
 
-app = FastAPI()
+app = FastAPI(tmp_dirs=[])
 
 
 @app.post('/generate', response_model=GeneratePowerHourJob)
@@ -24,6 +26,9 @@ async def generate(generate_request: GeneratePowerHourRequest):
         **job.dict(),
     ))
 
+    tmp_directory = tempfile.TemporaryDirectory()
+    app.extra['tmp_dirs'].append(tmp_directory)
+
     loop = asyncio.get_event_loop()
     loop.run_in_executor(
         powerhour.webserver.executor.executor,
@@ -31,6 +36,7 @@ async def generate(generate_request: GeneratePowerHourRequest):
         job.playlist_url,
         generate_request.youtube_api_key,
         ProgressPercentageLogger(job.id),
+        tmp_directory.name,
     )
     return job
 
@@ -41,6 +47,14 @@ async def get_job(job_id: str):
     return await database.fetch_one(query)
 
 
+@app.get('/jobs/{job_id}/download')
+async def download(job_id: str) -> FileResponse:
+    query = generate_power_hour_jobs.select(generate_power_hour_jobs.c.id == job_id)
+    job = GeneratePowerHourJob(**await database.fetch_one(query))
+    assert job.output_file is not None
+    return FileResponse(job.output_file)
+
+
 @app.on_event('startup')
 async def startup():
     await database.connect()
@@ -49,3 +63,8 @@ async def startup():
 @app.on_event('shutdown')
 async def shutdown():
     await database.disconnect()
+    for tmp_dir in app.extra['tmp_dirs']:
+        try:
+            tmp_dir.cleanup()
+        except Exception:
+            pass

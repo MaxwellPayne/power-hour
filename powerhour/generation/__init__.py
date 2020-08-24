@@ -17,16 +17,17 @@ def generate_powerhour(
         playlist_url: str,
         youtube_api_key: Optional[str],
         progress_logger: Optional[proglog.ProgressBarLogger] = None,
+        download_directory_path: str = VIDEO_DOWNLOAD_DIR_NAME
 ):
     # TODO: tmp directories
     ydl_opts = {
         'logger': YouTubeLogger(),
-        'outtmpl': os.path.join(VIDEO_DOWNLOAD_DIR_NAME, Downloader.YOUTUBE_DL_OUTPUT_FORMAT),
+        'outtmpl': os.path.join(download_directory_path, Downloader.YOUTUBE_DL_OUTPUT_FORMAT),
         'ignoreerrors': True,
     }
 
-    shutil.rmtree(VIDEO_DOWNLOAD_DIR_NAME, ignore_errors=True)
-    mkdir_if_not_exists(VIDEO_DOWNLOAD_DIR_NAME)
+    shutil.rmtree(download_directory_path, ignore_errors=True)
+    mkdir_if_not_exists(download_directory_path)
     LOGGER.info(f'Download starting for playlist: {playlist_url}')
     with Downloader(ydl_opts, progress_logger=progress_logger) as ydl:
         ydl.download([playlist_url])
@@ -48,8 +49,15 @@ def generate_powerhour(
         uniform_frame_size=VideoFrameSize(length=720, width=1280),
     )
     LOGGER.info('Writing power hour video to file')
+    output_file_path = os.path.join(download_directory_path, 'power_hour.mp4')
     power_hour.write_videofile(
-        os.path.join(VIDEO_DOWNLOAD_DIR_NAME, 'power_hour.mp4'),
+        output_file_path,
         logger=progress_logger if progress_logger is not None else 'bar',
     )
+    if progress_logger is not None:
+        progress_logger.bars_callback(GENERATE_POWERHOUR_PROGRESS_BAR_NAME, 'output_video', output_file_path)
+
     LOGGER.info('Done!')
+
+
+GENERATE_POWERHOUR_PROGRESS_BAR_NAME = 'generate_powerhour'

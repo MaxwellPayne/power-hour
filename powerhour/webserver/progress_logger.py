@@ -3,6 +3,7 @@ from decimal import Decimal
 
 import proglog
 
+import powerhour.generation
 from powerhour.generation.downloader import Downloader
 from powerhour.webserver.db import database, generate_power_hour_jobs
 
@@ -39,11 +40,21 @@ class ProgressPercentageLogger(proglog.ProgressBarLogger):
             elif attr == 'missing_video_ids':
                 # TODO: handle missing videos
                 pass
+        elif self.bar_is_generate_powerhour_task(bar):
+            if attr == 'output_video':
+                asyncio.get_event_loop().run_until_complete(self.report_output_file(self.job_id, value))
 
     def callback(self, **kw):
         message = kw.get('message')
         if message:
             print(message)
+
+    @staticmethod
+    def bar_is_generate_powerhour_task(bar: str) -> bool:
+        """
+        Determine whether the top-level `generate_powerhour()` function is invoking the logger directly
+        """
+        return bar == powerhour.generation.GENERATE_POWERHOUR_PROGRESS_BAR_NAME
 
     @staticmethod
     def bar_is_video_writer(bar: str) -> bool:
@@ -71,4 +82,11 @@ class ProgressPercentageLogger(proglog.ProgressBarLogger):
         query = generate_power_hour_jobs.update(
             generate_power_hour_jobs.c.id == job_id
         ).values(videos_processed=videos_processed)
+        return await database.execute(query)
+
+    @staticmethod
+    async def report_output_file(job_id: str, output_file_path: str):
+        query = generate_power_hour_jobs.update(
+            generate_power_hour_jobs.c.id == job_id
+        ).values(output_file=output_file_path)
         return await database.execute(query)

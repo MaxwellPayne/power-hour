@@ -18,6 +18,7 @@ generate_power_hour_jobs = sqlalchemy.Table(
     sqlalchemy.Column("youtube_api_key", sqlalchemy.String, nullable=True, default=None),
     sqlalchemy.Column("videos_processed", sqlalchemy.Integer, nullable=False, default=0),
     sqlalchemy.Column("completion_percentage", sqlalchemy.DECIMAL, nullable=False, default=Decimal(0)),
+    sqlalchemy.Column("output_file", sqlalchemy.String, nullable=True, default=None),
 )
 
 
