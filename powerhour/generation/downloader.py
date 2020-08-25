@@ -1,10 +1,11 @@
 import os
-from typing import Dict, List
+from typing import Dict, List, Optional
 
+import proglog
 import youtube_dl
 
-from powerhour.filesystem import VIDEO_DOWNLOAD_DIR_NAME
-from powerhour.logging import LOGGER
+from powerhour.generation.filesystem import VIDEO_DOWNLOAD_DIR_NAME
+from powerhour.generation.logging import LOGGER
 
 
 class Downloader(youtube_dl.YoutubeDL):
@@ -12,10 +13,14 @@ class Downloader(youtube_dl.YoutubeDL):
     # format string youtube-dl must use in order for its output files to be readable by this class
     YOUTUBE_DL_OUTPUT_FORMAT = '%(playlist_index)s___%(id)s___%(title)s.%(ext)s'
 
-    def __init__(self, params=None, auto_init=True):
+    # Name this class uses when reporting to the progress bar
+    PROGRESS_BAR_NAME = 'yt'
+
+    def __init__(self, params=None, auto_init=True, progress_logger: Optional[proglog.ProgressBarLogger]=None):
         super().__init__(params=params, auto_init=auto_init)
         self.video_ids_and_titles: Dict[str, str] = {}
         self._video_file_paths: List[str] = []
+        self._progress_logger = progress_logger
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         super().__exit__(exc_type, exc_val, exc_tb)
@@ -28,6 +33,14 @@ class Downloader(youtube_dl.YoutubeDL):
         video_id, title = info_dict['id'], info_dict['title']
         self.video_ids_and_titles[video_id] = title
         LOGGER.info(f'Finished processing {video_id}: {title}')
+        if self._progress_logger is not None:
+            self._progress_logger.bars_callback(
+                self.PROGRESS_BAR_NAME,
+                'count',
+                len(self.video_ids_and_titles),
+                old_value=len(self.video_ids_and_titles) - 1,
+            )
+
         return ret
 
     @property
@@ -66,7 +79,11 @@ class Downloader(youtube_dl.YoutubeDL):
                     missing_video_ids.remove(video_id)
                     break
 
-        return list(missing_video_ids)
+        missing_video_ids = list(missing_video_ids)
+        if self._progress_logger is not None:
+            self._progress_logger.bars_callback(self.PROGRESS_BAR_NAME, 'missing_video_ids', missing_video_ids)
+
+        return missing_video_ids
 
     def _find_downloaded_video_file_paths(self):
         absolute_file_paths_in_video_dir = self._absolute_file_paths_in_video_dir()

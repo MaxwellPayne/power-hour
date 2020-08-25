@@ -3,8 +3,8 @@ import os
 
 
 MODULE_DIR_NAME = os.path.abspath(os.path.dirname(__file__))
-ASSETS_DIR_NAME = os.path.join(os.path.dirname(MODULE_DIR_NAME), 'assets')
-VIDEO_DOWNLOAD_DIR_NAME = os.path.join(os.path.dirname(MODULE_DIR_NAME), 'video_downloads')
+ASSETS_DIR_NAME = os.path.join(MODULE_DIR_NAME, 'assets')
+VIDEO_DOWNLOAD_DIR_NAME = os.path.join(MODULE_DIR_NAME, 'video_downloads')
 
 
 def mkdir_if_not_exists(dir_name):

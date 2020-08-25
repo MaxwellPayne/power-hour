@@ -9,4 +9,15 @@ services:
       dockerfile: Dockerfile
     env_file: powerhour.env
     volumes:
-      - ./video_downloads:/usr/src/app/video_downloads
+      - ./video_downloads:/usr/src/app/powerhour/generation/video_downloads
+
+  webserver:
+    image: powerhour:latest
+    container_name: powerhour_webserver
+    command: uvicorn powerhour.webserver.app:app --host 0.0.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: powerhour.env
+    ports:
+      - "8000:8000"
