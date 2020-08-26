@@ -1,0 +1,35 @@
+<div class="container">
+<div class="row">
+<div class="col-sm-2"></div>
+
+<div class="col-md-8">
+	<form>
+		<div class="form-group">
+		  <label for="inputPlaylistUrl">Playlist URL:</label>
+		  <input id="inputPlaylistUrl" class="form-control" name="playlist_url" [(ngModel)]="job.playlist_url"/>
+		</div>
+		<div class="form-group">
+		  <label for="inputYoutubeApiKey">YouTube API Key:</label>
+		    <input id="inputYoutubeApiKey" class="form-control" name="youtube_api_key" [(ngModel)]="job.youtube_api_key"/>
+		</div>
+		<button id="generateBtn" class="btn btn-primary btn-lg btn-block" (click)="generate()">Generate</button>
+	</form>
+	<br/>
+	<div class="container">
+		<div class="row" *ngIf="job.videos_processed">
+		  Videos Processed:  {{ job.videos_processed }}
+		</div>
+
+		<div class="row" *ngIf="job.completion_percentage">
+		  Writing file, {{ job.completion_percentage }}% complete
+		</div>
+
+		<div class="row" *ngIf="job.completion_percentage === 100">
+		  <button id="downloadBtn" class="btn btn-primary btn-lg btn-block" (click)="download()">Download</button>
+		</div>
+	</div>
+</div>
+
+<div class="col-sm-2"></div>
+</div>
+</div>

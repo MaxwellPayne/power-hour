@@ -3,6 +3,7 @@ import tempfile
 import uuid
 
 from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import FileResponse
 
 import powerhour.webserver.executor
@@ -68,3 +69,11 @@ async def shutdown():
             tmp_dir.cleanup()
         except Exception:
             pass
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
