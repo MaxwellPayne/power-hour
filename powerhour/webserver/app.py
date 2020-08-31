@@ -1,10 +1,12 @@
 import asyncio
+import os
 import tempfile
 import uuid
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
-from starlette.responses import FileResponse
+from starlette.responses import FileResponse, RedirectResponse
 
 import powerhour.webserver.executor
 from powerhour.generation import generate_powerhour
@@ -14,6 +16,10 @@ from powerhour.webserver.progress_logger import ProgressPercentageLogger
 
 
 app = FastAPI(tmp_dirs=[])
+
+
+DIR_PATH = os.path.abspath(os.path.dirname(__file__))
+STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(DIR_PATH)), 'ui', 'dist', 'ui')
 
 
 @app.post('/generate', response_model=GeneratePowerHourJob)
@@ -69,6 +75,14 @@ async def shutdown():
             tmp_dir.cleanup()
         except Exception:
             pass
+
+
+@app.get('/ui/')
+def redirect_ui_to_index_html():
+    return RedirectResponse('/ui/index.html')
+
+
+app.mount('/ui', StaticFiles(directory=STATIC_DIR), name='ui')
 
 
 app.add_middleware(

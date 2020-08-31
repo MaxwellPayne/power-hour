@@ -1,2 +1,4 @@
 venv/
 video_downloads/
+ui/node_modules/
+ui/dist/
