@@ -6,11 +6,13 @@ RUN apt install -y nodejs
 
 ADD ./requirements.txt /usr/src/app/
 ADD ./powerhour /usr/src/app/powerhour/
+ADD ./run_module.sh /usr/src/app/run_module.sh
 ADD ./ui /usr/src/app/ui
 
 WORKDIR /usr/src/app/ui
-RUN npm install
-RUN npm run build -- --base-href=/ui/
+ARG ui_build_configuration=""
+ENV UI_BUILD_CONFIGURATION=$ui_build_configuration
+RUN /bin/bash build_ui.sh
 
 WORKDIR /usr/src/app
 
@@ -22,4 +24,4 @@ ENV YOUTUBE_API_KEY=""
 
 EXPOSE 8000
 
-CMD python -m powerhour ${PLAYLIST_URL} --youtube-api-key=${YOUTUBE_API_KEY}
+CMD uvicorn powerhour.webserver.app:app --host 0.0.0.0

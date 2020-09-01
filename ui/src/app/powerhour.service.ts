@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
 
 import { PowerHourJob } from './powerhour';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -14,9 +14,11 @@ export class PowerHourService {
     headers: new HttpHeaders({ 'Content-Type': 'application/json' })
   };
 
-  baseUrl = 'http://localhost:8000';
+  baseUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {
+    console.log('env', environment.production);
+  }
 
   getJob(jobId: string): Observable<any> {
     return this.http.get(this.baseUrl + '/jobs/' + jobId, this.httpOptions);
@@ -25,9 +27,6 @@ export class PowerHourService {
   postJob(job: PowerHourJob): Observable<any> {
     console.log(job);
     return this.http.post(this.baseUrl + '/generate', job, this.httpOptions)
-      //.pipe(
-      //  catchError(this.handleError<PowerHourJob>('postJob', null))
-      //)
   }
 
   downloadPowerHour(jobId: string): Observable<Blob> {

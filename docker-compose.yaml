@@ -8,16 +8,16 @@ services:
       context: .
       dockerfile: Dockerfile
     env_file: powerhour.env
+    command: /bin/bash run_module.sh
     volumes:
       - ./video_downloads:/usr/src/app/powerhour/generation/video_downloads
 
   webserver:
     image: powerhour:latest
     container_name: powerhour_webserver
-    command: uvicorn powerhour.webserver.app:app --host 0.0.0.0
     build:
       context: .
       dockerfile: Dockerfile
     env_file: powerhour.env
     ports:
-      - "8000:8000"
+      - "80:8000"
